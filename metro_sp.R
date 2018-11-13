@@ -1,3 +1,9 @@
+options(
+        stringsAsfactors = F,
+        repos = 'https://cran-fiocruz.br/'   
+)
+
+
 library(dplyr,quietly = TRUE)
 library(rvest, quietly = TRUE)
 library(httr, quietly = TRUE)
@@ -6,14 +12,18 @@ library(stringr, quietly = TRUE)
 library(glue, quietly = TRUE)
 library(DBI, quietly = TRUE)
 library(RMySQL, quietly = TRUE)
-options(
-        stringsAsfactors = F
-)
+
+
+#Alternativa: utilizando o pacman
+if(require(pacman)){
+      pacman::p_load(dplyr,rvest,httr,xml2,stringr,glue,DBI,RMySQL) 
+}else{
+      install.packages('pacman') 
+      pacman::p_load(dplyr,rvest,httr,xml2,stringr,glue,DBI,RMySQL) 
+}
+
 # URL de requisicao -------------------------------------------------------
 #setwd('~')
-
-
-
 
 url_base = 'http://www.viaquatro.com.br'
 
