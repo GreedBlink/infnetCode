@@ -91,7 +91,7 @@ linha_df = tibble(
   time   = rep(metro_data[2],12)
 )
 
-conn = dbConnect(MySQL(), db = 'metro', user = 'metro_user', password = '123456', host = 'infnetdbistance.cpiyzzzl5acl.sa-east-1.rds.amazonaws.com', port = 3306)
+conn = dbConnect(MySQL(), db = 'nome do banco', user = 'usuario', password = 'senha', host = 'endpoint', port = 3306)
 
 if(!is.null(conn)){
         message('Conexao estabelicda!')
@@ -100,7 +100,7 @@ if(!is.null(conn)){
         message('Dados inseridos com sucesso!')
         dbDisconnect(conn)
 }else{
-
+        message('Conexao nao estabelecida. Plano de contigencia: arquivo cvs\n')
 # Agregando tudo ----------------------------------------------------------
         if(file.exists('metro_data.csv')){
                 message('Atualiazando os dados!')
