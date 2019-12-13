@@ -47,9 +47,7 @@ metro_data = metro_html %>%
 # Ajeitando formato data  -------------------------------------------------
 
 
-
-metro_data = c(metro_data[[1]][1],metro_data[[1]][2])
-metro_data[1] = as.character(as.Date(metro_data[1],format = '%d/%m/%Y'))
+data_ok = ymd_hms(glue("{dmy(metro_data[[1]][1])} {hm(metro_data[[1]][2])}"))
 
 
 # Definindo as linhas do metro --------------------------------------------
@@ -69,8 +67,7 @@ df_final = tibble(
   status = metro_html %>%
     rvest::html_nodes('span.status') %>%
     rvest::html_text(),
-  data   = metro_data[1],
-  time   = metro_data[2]
+  datetime = data_ok
 )
 
 
@@ -78,27 +75,26 @@ df_final = tibble(
 
 
 info = metro_html %>%
-  rvest::html_nodes('div.info')
+  rvest::html_nodes('div.info') %>%
+        html_text()
 
 
 linha = metro_html %>%
-  html_nodes('div.linhas ul li div.info span.title')
+  html_nodes('div.linhas ul li div.info span.title')%>%
+        html_text()
 
 status = metro_html %>%
-  html_nodes('div.linhas ul li div.info span')
+  html_nodes('div.linhas ul li div.info span')%>%
+        html_text()
 
 
 
-status = status[!(status %in% linha)] %>%
-  html_text()
+status = status[!(status %in% linha)] 
 
 linha_df = tibble(
-  linha =  metro_html %>%
-    html_nodes('div.linhas ul li div.info span.title') %>%
-    html_text(),
+  linha =  linha,
   status = status,
-  data   = rep(metro_data[1],12),
-  time   = rep(metro_data[2],12)
+  datetime = data_ok
 )
 
 conn = dbConnect(MySQL(), db = 'nome do banco', user = 'usuario', password = 'senha', host = 'endpoint', port = 3306)
