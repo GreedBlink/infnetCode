@@ -60,15 +60,19 @@ data_ok = ymd_hms(glue("{dmy(metro_data[[1]][1])} {hm(metro_data[[1]][2])}"))
 
 
 
-df_final = tibble(
-  linha=  metro_html %>%
-    rvest::html_nodes('h2') %>%
-    rvest::html_text() ,
-  status = metro_html %>%
-    rvest::html_nodes('span.status') %>%
-    rvest::html_text(),
-  datetime = data_ok
-)
+ df_final = tibble(
+     linha=  metro_html %>%
+         rvest::html_nodes('h2') %>%
+         rvest::html_text() ,
+     status = metro_html %>%
+         rvest::html_nodes('span.status') %>%
+         rvest::html_text() %>%  
+         str_remove_all('Operação') %>% 
+         str_remove("\\p{WHITE_SPACE}") %>% 
+         str_to_lower(),
+     datetime   = data_ok
+ )
+
 
 
 # Pegando informacoes das linhas restante ---------------------------------
@@ -91,15 +95,27 @@ status = metro_html %>%
 
 status = status[!(status %in% linha)] 
 
-linha_df = tibble(
+df_linha = tibble(
   linha =  linha,
   status = status,
   datetime = data_ok
 )
 
-conn = dbConnect(MySQL(), db = 'nome do banco', user = 'usuario', password = 'senha', host = 'endpoint', port = 3306)
+conn =  tryCatch({
+        dbConnect(RMySQL::MySQL(), 
+                  db = 'nome do banco', 
+                  user = 'usuario', 
+                  password = 'senha', 
+                  host = 'endpoint', 
+                  port = 3306)
+        },
+        error = function(e){
+                cat(e)
+                'ERROR'
+        })
 
-if(!is.null(conn)){
+
+if(conn =! 'ERROR'){
         message('Conexao estabelicda!')
         queries = glue("insert into metro.metroSP(linha,status,data,hora) value('{linha_df$linha}','{linha_df$status}','{linha_df$data}','{linha_df$time}')")
         for(i in 1:length(queries)){try(dbSendQuery(conn = conn, statement = queries[i]),silent = TRUE)}
@@ -111,11 +127,11 @@ if(!is.null(conn)){
         if(file.exists('metro_data.csv')){
                 message('Atualiazando os dados!')
                 dados = read.csv2('metro_data.csv')
-                dados = rbind(dados,linha_df)
+                dados = rbind(dados,df_linha)
                 write.csv2(dados, file = 'metro_data.csv', row.names = FALSE)
         }else{
                 message('Criando o arquivo de dados!')
-                write.csv2(linha_df, file = 'metro_data.csv', row.names = FALSE)
+                write.csv2(df_linha, file = 'metro_data.csv', row.names = FALSE)
         }
 }
 message(glue('{Sys.time()} - Done!! (Metro SP - Viaquatro)'))
